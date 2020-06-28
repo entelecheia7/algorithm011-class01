@@ -5,7 +5,8 @@ import (
 )
 
 func main() {
-
+	nums := []int{1, 2, 3, 4, 5, 6, 7}
+	rotate3(nums, 3)
 }
 
 /* 简单 */
@@ -23,6 +24,34 @@ func removeDuplicates(nums []int) int {
 }
 
 // 旋转数组（微软、亚马逊、PayPal 在半年内面试中考过）
+// 法一：借助一个额外的数组，空间复杂度O(n)，时间复杂度O(n)，非原地算法，略
+// 法二：每次右移1位，重复k次，空间复杂度O(1)，时间复杂度O(k*n)，原地算法
+func rotate2(nums []int, k int) {
+	n := len(nums)
+	if n < 2 {
+		return
+	}
+	tmp := nums[0]
+	for k > 0 {
+		for i := 0; i < n; i++ {
+			if i == n-1 {
+				nums[0] = tmp
+			} else {
+				tmp, nums[i+1] = nums[i+1], tmp
+			}
+		}
+		k--
+	}
+}
+
+// 法三：反转数组。实际上
+func rotate3(nums []int, k int) {
+	n := len(nums)
+	if n < 2 {
+		return
+	}
+
+}
 
 // 合并两个有序链表（亚马逊、字节跳动在半年内面试常考）
 func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {
