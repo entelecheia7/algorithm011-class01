@@ -1,8 +1,6 @@
 package main
 
-import (
-	"container/ring"
-)
+import "fmt"
 
 func main() {
 
