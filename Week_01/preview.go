@@ -139,3 +139,67 @@ func inorderTraversal4(root *TreeNode) []int {
 }
 
 // 3.最小的 k 个数
+// 法一：排序，时间O(nlogn)，空间O(logn)
+// 法二：利用大顶堆，时间O(nlogk)，空间O(k)
+// 法三：利用快排思想进行递归分区，时间O(n)
+func getLeastNumbers1(arr []int, k int) []int {
+	sort.Ints(arr)
+	return arr[:k]
+}
+
+func getLeastNumbers2(arr []int, k int) []int {
+	if len(arr) < k {
+		return arr
+	}
+	var h maxIntHeap = make([]int, k)
+	copy(h, arr)
+	heap.Init(&h)
+	for i := k; i < len(arr); i++ {
+		if h[0] > arr[i] {
+			heap.Pop(&h)
+			heap.Push(&h, arr[i])
+		}
+	}
+
+	return h
+}
+
+type maxIntHeap []int
+
+func (h maxIntHeap) Len() int            { return len(h) }
+func (h maxIntHeap) Less(i, j int) bool  { return h[i] > h[j] }
+func (h maxIntHeap) Swap(i, j int)       { h[i], h[j] = h[j], h[i] }
+func (h *maxIntHeap) Push(x interface{}) { (*h) = append(*h, x.(int)) }
+func (h *maxIntHeap) Pop() interface{}   { min := (*h)[len(*h)-1]; (*h) = (*h)[:len(*h)-1]; return min }
+
+func getLeastNumbers3(arr []int, k int) []int {
+	if len(arr) < k {
+		return arr
+	} else if k == 0 {
+		return nil
+	}
+	return quickSearch(arr, 0, len(arr)-1, k)
+}
+func quickSearch(arr []int, left, right, k int) []int {
+	mid := partition(arr, left, right)
+	if mid == k-1 {
+		return arr[:k]
+	} else if mid < k-1 {
+		return quickSearch(arr, mid+1, right, k)
+	}
+	return quickSearch(arr, left, mid-1, k)
+}
+
+// 返回分区下标
+func partition(arr []int, left, right int) (pivot int) {
+	standard := arr[right]
+	i := left
+	for j := left; j < right; j++ {
+		if arr[j] < standard {
+			arr[j], arr[i] = arr[i], arr[j]
+			i++
+		}
+	}
+	arr[right], arr[i] = arr[i], arr[right]
+	return i
+}
