@@ -1,9 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"container/heap"
+	"fmt"
+	"sort"
+)
 
 func main() {
-
+	fmt.Println(getLeastNumbers1([]int{3, 2, 1}, 2))
+	fmt.Println(getLeastNumbers2([]int{3, 2, 1}, 2))
+	fmt.Println(getLeastNumbers3([]int{3, 2, 1}, 2))
 }
 
 // 1.有效的字母异位词
