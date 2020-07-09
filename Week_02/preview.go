@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 )
 
 func main() {
@@ -68,5 +69,144 @@ func generateParenthesis2(n int) []string {
 }
 
 // Pow(x, n)
+// 法一：递归，分治，O(logn)
+// 注意考虑-n的溢出情况
+func myPow1(x float64, n int) float64 {
+	if n == 0 || x == 1 {
+		return 1
+	}
+	if n > 0 {
+		return myPowHelper(x, n)
+	}
+	if n == math.MinInt32 {
+		x *= x
+		n >>= 1
+	}
+	return 1.0 / myPowHelper(x, -n)
+}
+func myPowHelper(x float64, n int) (result float64) {
+	if n == 0 || x == 1 {
+		return 1
+	}
+	half := myPowHelper(x, n>>1)
+	if n%2 == 0 {
+		return half * half
+	}
+	return half * half * x
+}
+
+// 法二：循环，二进制解法
+// O(logn)
+func myPow2(x float64, n int) (result float64) {
+	if n == 0 || x == 1 {
+		return 1
+	}
+	if n == math.MinInt32 {
+		x *= x
+		n >>= 1
+	}
+	if n < 0 {
+		x = 1.0 / x
+		n = -n
+	}
+	result = 1
+	factor := x
+	for n > 0 {
+		if n%2 == 1 {
+			result = result * factor
+		}
+		factor *= factor
+		n >>= 1
+	}
+	return result
+}
+
 // 子集
+// 法一：回溯，逐个生成长度为1、2、3……len(nums)的子集
+func subsets1(nums []int) (result [][]int) {
+	subsetBTHelper(nums, 0, []int{}, &result)
+
+	return result
+}
+func subsetBTHelper(nums []int, from int, cur []int, result *[][]int) {
+	tmp := make([]int, len(cur))
+	copy(tmp, cur)
+	*result = append(*result, tmp)
+
+	for i := from; i < len(nums); i++ {
+		subsetBTHelper(nums, i+1, append(cur, nums[i]), result)
+	}
+}
+
+// 法二：二进制
+// 将 nums 视为长度为 len(nums) 的二进制串 x，则 nums 的子集就是 0-n 位的 x 掩码
+// 以 length 为 3 的 nums 为例，其二进制位掩码分别为 000、001、010、011、100、101、111。
+// 通过计算其掩码的位是否为 1 (i >> j & 1)来决定是否添加 nums 对于位置的数字到 tmp，得出子集。
+func subsets2(nums []int) (result [][]int) {
+	if len(nums) == 0 {
+		return nil
+	}
+	for i := 0; i < (1 << len(nums)); i++ { // 本层循环用于提供掩码
+		tmp := []int{}
+		for j := 0; j < len(nums); j++ {
+			if (i >> j & 1) == 1 {
+				tmp = append(tmp, nums[j])
+			}
+		}
+		result = append(result, tmp)
+	}
+
+	return result
+}
+
 // N 皇后
+func solveNQueens(n int) (result [][]string) {
+	// 生成空棋盘
+	board := make([]string, n)
+	for i := 0; i < n; i++ {
+		board[i] = strings.Repeat(".", n)
+	}
+
+	nQueensHelper(n, 0, board, &result)
+	return result
+}
+
+// row代表放置的行，范围：0~n-1
+func nQueensHelper(n, row int, board []string, result *[][]string) {
+	if row == n {
+		tmp := make([]string, n)
+		copy(tmp, board)
+		*result = append(*result, tmp)
+		return
+	}
+	for column := 0; column < n; column++ {
+		if checkNQueen(n, row, column, board) {
+			initRow := board[row]
+			rowStr := []byte(board[row])
+			rowStr[column] = 'Q'
+			board[row] = string(rowStr)
+			nQueensHelper(n, row+1, board, result)
+			board[row] = initRow
+		}
+	}
+
+}
+
+// row和column代表新皇后想要放置的行和列
+func checkNQueen(n, row, column int, cur []string) bool {
+	leftup, rightup := column-1, column+1
+	for i := row - 1; i >= 0; i-- { // i表示已放置皇后的行
+		if cur[i][column] == 'Q' { // 检查竖行
+			return false
+		}
+		if leftup >= 0 && cur[i][leftup] == 'Q' { // 检查左斜线
+			return false
+		}
+		if rightup < n && cur[i][rightup] == 'Q' { // 检查右斜线
+			return false
+		}
+		leftup--
+		rightup++
+	}
+	return true
+}
