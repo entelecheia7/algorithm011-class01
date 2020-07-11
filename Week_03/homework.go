@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 	"sort"
+	"strings"
 )
 
 func main() {
 	// fmt.Println(permute([]int{1, 2, 3}))
 	// fmt.Println(combine(4, 2))
 
-	fmt.Println(permuteUnique([]int{1, 1, 2}))
-	fmt.Println(permuteUnique2([]int{1, 1, 2}))
+	// fmt.Println(permuteUnique([]int{1, 1, 2}))
+	// fmt.Println(permuteUnique2([]int{1, 1, 2}))
+
+	fmt.Println(solveNQueens(4))
 }
 
 type TreeNode struct {
@@ -188,7 +191,140 @@ func permuteUniqueHelper2(nums []int, i int, result *[][]int) {
 }
 
 // https://leetcode-cn.com/problems/majority-element/description/
+// 169. 多数元素
+// 法一：借助一个map统计元素频率，O(n)
+func majorityElement1(nums []int) int {
+	freq := len(nums) / 2
+	m := make(map[int]int, freq)
+	for _, num := range nums {
+		m[num]++
+		if m[num] > freq {
+			return num
+		}
+	}
+	return -1
+}
+
+// 法二：Boyer-Moore 投票算法
+// 时间复杂度O(n)，空间复杂度O(1)
+func majorityElement2(nums []int) int {
+	candidate, count := nums[0], 1
+	for i := 1; i < len(nums); i++ {
+		if count == 0 {
+			candidate = nums[i]
+			count++
+		} else if nums[i] == candidate {
+			count++
+		} else {
+			count--
+		}
+	}
+	return candidate
+}
 
 // https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/
+// 17. 电话号码的字母组合
+var digitsRelation = [][]string{
+	0: nil,
+	1: nil,
+	2: []string{"a", "b", "c"},
+	3: []string{"d", "e", "f"},
+	4: []string{"g", "h", "i"},
+	5: []string{"j", "k", "l"},
+	6: []string{"m", "n", "o"},
+	7: []string{"p", "q", "r", "s"},
+	8: []string{"t", "u", "v"},
+	9: []string{"w", "x", "y", "z"},
+}
+
+// 法一：循环版，空间复杂度大
+func letterCombinations1(digits string) (result []string) {
+	n := len(digits)
+	if n == 0 {
+		return nil
+	}
+	for i := 0; i < n; i++ {
+		if i == 0 {
+			result = digitsRelation[digits[i]-'0']
+		} else {
+			tmp := make([]string, 0, len(result)*len(digitsRelation[digits[i]-'0']))
+			for _, r := range result {
+				for _, s := range digitsRelation[digits[i]-'0'] {
+					tmp = append(tmp, r+s)
+				}
+			}
+			result = tmp
+		}
+	}
+	return result
+}
+
+// 法二：回溯
+// best
+func letterCombinations2(digits string) (result []string) {
+	n := len(digits)
+	if n == 0 {
+		return nil
+	}
+	letterCombinationsHelper(digits, "", &result)
+	return result
+}
+
+func letterCombinationsHelper(digits string, cur string, result *[]string) {
+	if digits == "" {
+		*result = append(*result, cur)
+		return
+	}
+	for _, s := range digitsRelation[digits[0]-'0'] {
+		letterCombinationsHelper(digits[1:], cur+s, result)
+	}
+}
 
 // https://leetcode-cn.com/problems/n-queens/
+// 51. N皇后
+func solveNQueens(n int) (result [][]string) {
+	board := make([]string, n)
+	for i := 0; i < n; i++ {
+		board[i] = strings.Repeat(".", n)
+	}
+	solveNQueensHelper(n, board, 0, &result)
+	return result
+}
+func solveNQueensHelper(n int, board []string, row int, result *[][]string) {
+	if row == n {
+		tmp := make([]string, n)
+		copy(tmp, board)
+		*result = append(*result, tmp)
+		return
+	}
+	for i := 0; i < n; i++ {
+		if checkNQueenPos(board, row, i) {
+			orig := board[row]
+			putQueen := []byte(board[row])
+			putQueen[i] = 'Q'
+			board[row] = string(putQueen)
+			solveNQueensHelper(n, board, row+1, result)
+			board[row] = orig
+		}
+	}
+}
+
+// 检查当前想要放置Queen的位置是否合法
+func checkNQueenPos(board []string, row, column int) bool {
+	leftup, rightup := column-1, column+1
+	for i := row - 1; i >= 0; i-- {
+		if board[i][column] == 'Q' {
+			return false
+		}
+		if leftup >= 0 && board[i][leftup] == 'Q' {
+			return false
+		}
+		if rightup < len(board) && board[i][rightup] == 'Q' {
+			return false
+		}
+		leftup--
+		rightup++
+
+	}
+	return true
+}
