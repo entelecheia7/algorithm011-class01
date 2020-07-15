@@ -1,9 +1,12 @@
 package main
 
-// import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 func main() {
-
+	fmt.Println(canJump([]int{2, 3, 1, 1, 4}))
 }
 
 type TreeNode struct {
@@ -13,7 +16,8 @@ type TreeNode struct {
 }
 
 // 二叉树的层次遍历
-func levelOrder(root *TreeNode) (result [][]int) {
+// 法一：使用队列
+func levelOrder1(root *TreeNode) (result [][]int) {
 	if root == nil {
 		return nil
 	}
@@ -34,6 +38,25 @@ func levelOrder(root *TreeNode) (result [][]int) {
 		result = append(result, levelVal)
 	}
 	return result
+}
+
+// 法二：DFS
+func levelOrder2(root *TreeNode) (result [][]int) {
+	levelOrderDFSHelper(root, 0, &result)
+	return result
+}
+
+// level表示节点层级，由上至下从0开始递增
+func levelOrderDFSHelper(root *TreeNode, level int, result *[][]int) {
+	if root == nil {
+		return
+	}
+	if level == len(*result) {
+		*result = append(*result, []int{})
+	}
+	(*result)[level] = append((*result)[level], root.Val)
+	levelOrderDFSHelper(root.Left, level+1, result)
+	levelOrderDFSHelper(root.Right, level+1, result)
 }
 
 // 分发饼干
@@ -106,5 +129,49 @@ func maxProfitOptimization(prices []int) (profit int) {
 }
 
 // 跳跃游戏
+// 贪心，O(n)
+// 从第一个格子逐渐更新可以跳到的最远处
+// 直至 到达终点 或 尝试完毕，发现终点不可达
+func canJump(nums []int) (result bool) {
+	n := len(nums)
+	if n == 0 {
+		return false
+	} else if n == 1 {
+		return true
+	}
+	furthest := nums[0]
+	for i := 0; i <= furthest; i++ {
+		furthest = getMax(furthest, i+nums[i])
+		if furthest >= n-1 {
+			return true
+		}
+	}
+	return false
+}
+func getMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 // x 的平方根
+func mySqrt(x int) int {
+	if x == 0 {
+		return 0
+	} else if x == 1 {
+		return 1
+	}
+	y := x >> 1
+	for {
+		tmp := y * y
+		if (tmp == x) || (tmp < x && (y+1)*(y+1) > x) {
+			break
+		} else {
+			y = (y + x/y) >> 1
+		}
+	}
+	return y
+}
+
 // 有效的完全平方数
