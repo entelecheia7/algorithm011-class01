@@ -8,7 +8,6 @@ func main() {
 }
 
 /* 简单 */
-
 // 柠檬水找零（亚马逊在半年内面试中考过）
 // 找零时，总是试图先支出最大的面值
 func lemonadeChange(bills []int) bool {
