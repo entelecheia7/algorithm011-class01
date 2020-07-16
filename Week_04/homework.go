@@ -10,6 +10,37 @@ func main() {
 /* 简单 */
 
 // 柠檬水找零（亚马逊在半年内面试中考过）
+// 找零时，总是试图先支出最大的面值
+func lemonadeChange(bills []int) bool {
+	n := len(bills)
+	if n == 0 {
+		return true
+	} else if bills[0] != 5 {
+		return false
+	}
+	count5, count10 := 1, 0
+	for i := 1; i < n; i++ {
+		if bills[i] == 5 { // 不找零
+			count5++
+		} else if bills[i] == 10 { // 找5块
+			if count5 == 0 {
+				return false
+			}
+			count10++
+			count5--
+		} else { // 找15
+			if count10 > 0 && count5 > 0 {
+				count10--
+				count5--
+			} else if count5 >= 3 {
+				count5 -= 3
+			} else {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 // 买卖股票的最佳时机 II （亚马逊、字节跳动、微软在半年内面试中考过）
 // 分发饼干（亚马逊在半年内面试中考过）
