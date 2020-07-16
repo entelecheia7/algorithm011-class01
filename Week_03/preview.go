@@ -175,3 +175,47 @@ func mySqrt(x int) int {
 }
 
 // 有效的完全平方数
+// 法一：二分法
+func isPerfectSquare(num int) bool {
+	if num == 0 || num == 1 {
+		return true
+	}
+	left, right := 2, num
+	for left <= right {
+		mid := left + ((right - left) >> 1)
+		product := mid * mid
+		if product == num {
+			return true
+		} else if product < num {
+			if (mid+1)*(mid+1) > num {
+				return false
+			}
+			left = mid + 1
+		} else {
+			right = mid - 1
+		}
+	}
+
+	return false
+}
+
+// 法二：牛顿迭代法
+// 收敛的O(logn)，优于二分法，空间复杂度更低
+// best
+func isPerfectSquare2(num int) bool {
+	if num == 0 || num == 1 {
+		return true
+	}
+	x := num >> 1
+	for {
+		product := x * x
+		if product == num {
+			return true
+		} else if product < num && (x+1)*(x+1) > num {
+			return false
+		}
+		x = (x + num/x) >> 1
+	}
+
+	return false
+}
