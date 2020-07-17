@@ -1,10 +1,14 @@
 package main
 
 import (
-// "fmt"
+	"fmt"
+	"sort"
 )
 
 func main() {
+	// fmt.Println(maxProfit([]int{7, 1, 5, 3, 6, 4})) // 7
+
+	fmt.Println(findContentChildren([]int{1, 2, 3}, []int{1, 1})) // 1
 }
 
 /* 简单 */
@@ -42,7 +46,40 @@ func lemonadeChange(bills []int) bool {
 }
 
 // 买卖股票的最佳时机 II （亚马逊、字节跳动、微软在半年内面试中考过）
+// 只有一段递增的序列才能提供利润
+func maxProfit(prices []int) (profit int) {
+	n := len(prices)
+	if n <= 1 {
+		return 0
+	}
+	for i := 1; i < n; i++ {
+		if prices[i] > prices[i-1] {
+			profit += prices[i] - prices[i-1]
+		}
+	}
+	return profit
+}
+
 // 分发饼干（亚马逊在半年内面试中考过）
+// g代表小朋友，s代表饼干
+func findContentChildren(g []int, s []int) (satisfy int) {
+	if len(g) == 0 || len(s) == 0 {
+		return 0
+	}
+	sort.Ints(g)
+	sort.Ints(s)
+	si, gi := 0, 0
+	for si < len(s) && gi < len(g) {
+		if s[si] >= g[gi] {
+			satisfy++
+			gi++
+		}
+		si++
+
+	}
+	return satisfy
+}
+
 // 模拟行走机器人
 // 使用二分查找，寻找一个半有序数组 [4, 5, 6, 7, 0, 1, 2] 中间无序的地方
 // 说明：同学们可以将自己的思路、代码写在第 4 周的学习总结中
