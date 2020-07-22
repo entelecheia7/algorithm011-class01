@@ -151,7 +151,6 @@ func findDisorderIndex(nums []int) int {
 }
 
 /* 中等 */
-
 // 单词接龙（亚马逊在半年内面试常考）
 func ladderLength(beginWord string, endWord string, wordList []string) (pathLen int) {
 	n := len(beginWord)
@@ -201,13 +200,319 @@ func ladderLength(beginWord string, endWord string, wordList []string) (pathLen 
 }
 
 // 岛屿数量（近半年内，亚马逊在面试中考查此题达到 350 次）
+func numIslands1(grid [][]byte) (count int) {
+	if len(grid) == 0 {
+		return 0
+	}
+	lx := len(grid)
+	ly := len(grid[0])
+	visited := make([][]bool, lx)
+	for i := 0; i < lx; i++ {
+		visited[i] = make([]bool, ly)
+	}
+	for i := 0; i < lx; i++ {
+		for j := 0; j < ly; j++ {
+			if !visited[i][j] && grid[i][j] == '1' {
+				// 第一次发现一个岛的坐标，递归标记周围是‘1’的坐标为已访问
+				visited[i][j] = true
+				markIsland(grid, i, j, lx, ly, visited)
+				count++
+			}
+
+		}
+	}
+	return count
+}
+
+var around = [4][2]int{{-1, 0}, {0, -1}, {0, 1}, {1, 0}}
+
+func markIsland(grid [][]byte, x, y, lx, ly int, visited [][]bool) {
+	if x < 0 || y < 0 || x >= lx || y >= ly {
+		return
+	}
+	for _, diff := range around {
+		newX, newY := x+diff[0], y+diff[1]
+		if newX >= 0 && newX < lx && newY >= 0 && newY < ly && grid[newX][newY] == '1' && !visited[newX][newY] {
+			visited[newX][newY] = true
+			markIsland(grid, newX, newY, lx, ly, visited)
+		}
+	}
+}
+
+func numIslands2(grid [][]byte) (count int) {
+	if len(grid) == 0 {
+		return 0
+	}
+	lx := len(grid)
+	ly := len(grid[0])
+	visited := make([][]bool, lx)
+	for i := 0; i < lx; i++ {
+		visited[i] = make([]bool, ly)
+	}
+
+	for i := 0; i < lx; i++ {
+		for j := 0; j < ly; j++ {
+			if grid[i][j] == '1' && !visited[i][j] {
+				queue := [][2]int{{i, j}}
+				visited[i][j] = true
+				for len(queue) > 0 {
+					x, y := queue[0][0], queue[0][1]
+					for _, diff := range around {
+						newX, newY := x+diff[0], y+diff[1]
+						if newX >= 0 && newX < lx && newY >= 0 && newY < ly && grid[newX][newY] == '1' && !visited[newX][newY] {
+							visited[newX][newY] = true
+							queue = append(queue, [2]int{newX, newY})
+						}
+					}
+					queue = queue[1:]
+				}
+
+				count++
+			}
+		}
+	}
+	return count
+}
+
 // 扫雷游戏（亚马逊、Facebook 在半年内面试中考过）
+var relative = [8][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}}
+
+func updateBoard1(board [][]byte, click []int) [][]byte {
+	lx := len(board)
+	ly := len(board[0])
+	queue := [][2]int{{click[0], click[1]}}
+	visited := make(map[[2]int]bool, lx*ly) // 防止添加重复的坐标入组，这在大量数据时会造成内存问题
+	visited[queue[0]] = true
+	for len(queue) > 0 {
+		x, y := queue[0][0], queue[0][1]
+		queue = queue[1:]
+		if board[x][y] == 'M' {
+			board[x][y] = 'X'
+			continue
+		}
+		nextXY := [][2]int{}
+		var mine byte = '0' // 地雷数量
+		for _, xy := range relative {
+			relativeX, relativeY := x+xy[0], y+xy[1]
+			if relativeX < 0 || relativeX >= lx || relativeY < 0 || relativeY >= ly {
+				continue
+			}
+			switch board[relativeX][relativeY] {
+			case 'M':
+				mine++
+			case 'E':
+				nextXY = append(nextXY, [2]int{relativeX, relativeY})
+			}
+		}
+		if mine > '0' {
+			board[x][y] = mine
+		} else {
+			board[x][y] = 'B'
+			for _, xy := range nextXY {
+				if !visited[xy] {
+					queue = append(queue, xy)
+					visited[xy] = true
+				}
+			}
+
+		}
+	}
+
+	return board
+}
+
+// 法二：DFS
+func updateBoard2(board [][]byte, click []int) [][]byte {
+	if board[click[0]][click[1]] == 'M' {
+		board[click[0]][click[1]] = 'X'
+		return board
+	}
+	lx := len(board)
+	ly := len(board[0])
+	updateBoardDFSHelper(board, click[0], click[1], lx, ly)
+
+	return board
+}
+func updateBoardDFSHelper(board [][]byte, x, y, lx, ly int) {
+	if x < 0 || x >= lx || y < 0 || y >= ly || board[x][y] != 'E' {
+		return
+	}
+	var mine byte = '0' // 地雷数量
+	board[x][y] = 'B'
+	for _, xy := range relative {
+		relativeX, relativeY := x+xy[0], y+xy[1]
+		if relativeX >= 0 && relativeX < lx && relativeY >= 0 && relativeY < ly && board[relativeX][relativeY] == 'M' {
+			mine++
+		}
+	}
+	if mine > '0' {
+		board[x][y] = mine
+	} else {
+		for _, xy := range relative {
+			updateBoardDFSHelper(board, x+xy[0], y+xy[1], lx, ly)
+		}
+	}
+}
+
 // 跳跃游戏 （亚马逊、华为、Facebook 在半年内面试中考过）
+// 法一：贪心，O(n)
+// 从第一个格子逐渐更新可以跳到的最远处
+// 直至 到达终点 或 尝试完毕，发现终点不可达
+func canJump1(nums []int) (result bool) {
+	n := len(nums)
+	if n == 0 {
+		return false
+	} else if n == 1 {
+		return true
+	}
+	furthest := nums[0]
+	for i := 0; i <= furthest; i++ {
+		furthest = getMax(furthest, i+nums[i])
+		if furthest >= n-1 {
+			return true
+		}
+	}
+	return false
+}
+
+// 法二：动态规划
+// 从倒数第二个元素开始判断是否可以到达终点，逐步更新终点
+// O(n^2)
+func canJump2(nums []int) bool {
+	n := len(nums)
+	if n == 0 {
+		return false
+	} else if n == 1 {
+		return true
+	}
+	state := make([]bool, n)
+	state[n-1] = true
+	// 2, 3, 1, 1, 4
+	for i := n - 2; i >= 0; i-- {
+		// j代表在i处可能走的步数
+		for j := 1; j <= nums[i] && i+j < n; j++ {
+			if state[i+j] == true {
+				state[i] = true
+				break
+			}
+		}
+	}
+	return state[0]
+}
+
 // 搜索旋转排序数组（Facebook、字节跳动、亚马逊在半年内面试常考）
+func search(nums []int, target int) int {
+	if len(nums) == 0 {
+		return -1
+	}
+	left, right := 0, len(nums)-1
+	for left <= right {
+		mid := left + ((right - left) >> 1)
+		if nums[mid] == target {
+			return mid
+		} else if nums[left] <= nums[mid] { // 左侧为有序数组
+			if target >= nums[left] && target < nums[mid] {
+				right = mid - 1
+			} else {
+				left = mid + 1
+			}
+		} else { // 右侧为有序数组
+			if target > nums[mid] && target <= nums[right] {
+				left = mid + 1
+			} else {
+				right = mid - 1
+			}
+		}
+	}
+	return -1
+}
+
 // 搜索二维矩阵（亚马逊、微软、Facebook 在半年内面试中考过）
 // 寻找旋转排序数组中的最小值（亚马逊、微软、字节跳动在半年内面试中考过）
 
 /* 困难 */
-
 // 单词接龙 II （微软、亚马逊、Facebook 在半年内面试中考过）
+// 双向BFS
+func findLadders(beginWord string, endWord string, wordList []string) (result [][]string) {
+	if len(wordList) == 0 {
+		return nil
+	}
+	wordListMap := make(map[string]bool, len(wordList)) // 一个全局的未访问元素数组
+	for _, w := range wordList {
+		wordListMap[w] = true
+	}
+	if !wordListMap[endWord] {
+		return nil
+	}
+	delete(wordListMap, endWord)
+
+	// queue保存这一层的节点
+	queue, queueFromEnd := map[string]bool{beginWord: true}, map[string]bool{endWord: true}
+	n := len(beginWord)
+	var j byte
+	endFlag, reverseFlag := false, false
+	path := make(map[string][]string) // 记录key可以转换的单次
+
+	for len(queue) > 0 && len(queueFromEnd) > 0 && !endFlag {
+		if len(queue) > len(queueFromEnd) {
+			queue, queueFromEnd = queueFromEnd, queue
+			reverseFlag = !reverseFlag
+		}
+		for w := range queue {
+			delete(wordListMap, w)
+		}
+		newqueue := make(map[string]bool)
+		for word := range queue {
+			tmp := []byte(word)
+			for i := 0; i < n; i++ {
+				old := tmp[i]
+				for j = 'a'; j <= 'z'; j++ {
+					if j != old {
+						tmp[i] = j
+						convertion := string(tmp)
+						if queueFromEnd[convertion] { // 双向BFS相遇
+							if reverseFlag {
+								path[convertion] = append(path[convertion], word)
+							} else {
+								path[word] = append(path[word], convertion)
+							}
+							endFlag = true
+						} else if wordListMap[convertion] { // 未访问过，说明到达下一层
+							newqueue[convertion] = true
+							if reverseFlag {
+								path[convertion] = append(path[convertion], word)
+							} else {
+								path[word] = append(path[word], convertion)
+							}
+						}
+					}
+				}
+				tmp[i] = old
+			}
+		}
+		queue = newqueue
+	}
+
+	// DFS，从beginWord开始组装结果
+	cur := []string{beginWord}
+	var generator func([]string)
+	generator = func(words []string) {
+		for _, n := range words {
+			cur = append(cur, n)
+			if n == endWord {
+				tmp := make([]string, len(cur))
+				copy(tmp, cur)
+				result = append(result, tmp)
+			} else {
+				generator(path[n])
+			}
+			cur = cur[:len(cur)-1]
+		}
+
+	}
+	generator(path[beginWord])
+
+	return result
+}
+
 // 跳跃游戏 II （亚马逊、华为、字节跳动在半年内面试中考过）
