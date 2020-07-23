@@ -428,8 +428,50 @@ func search(nums []int, target int) int {
 }
 
 // 搜索二维矩阵（亚马逊、微软、Facebook 在半年内面试中考过）
+func searchMatrix(matrix [][]int, target int) bool {
+	if len(matrix) == 0 || len(matrix[0]) == 0 || matrix[0][0] > target {
+		return false
+	}
+	m := len(matrix)
+	n := len(matrix[0])
+	if matrix[m-1][n-1] < target {
+		return false
+	}
+	left, right := 0, m*n-1
+	for left <= right {
+		mid := left + ((right - left) >> 1)
+		midVal := matrix[mid/n][mid%n]
+		if midVal == target {
+			return true
+		} else if midVal < target {
+			left = mid + 1
+		} else {
+			right = mid - 1
+		}
+	}
+	return false
+}
 
 // 寻找旋转排序数组中的最小值（亚马逊、微软、字节跳动在半年内面试中考过）
+// 最小值永远在（中点以）及发生了旋转的一侧
+func findMin(nums []int) int {
+	n := len(nums)
+	if n == 0 {
+		return 0
+	} else if n == 1 {
+		return nums[0]
+	}
+	left, right := 0, n-1
+	for left < right {
+		mid := left + ((right - left) >> 1)
+		if nums[mid] > nums[right] { // 左侧有序，右侧无序
+			left = mid + 1
+		} else {
+			right = mid
+		}
+	}
+	return nums[left]
+}
 
 /* 困难 */
 // 单词接龙 II （微软、亚马逊、Facebook 在半年内面试中考过）
@@ -517,3 +559,21 @@ func findLadders(beginWord string, endWord string, wordList []string) (result []
 }
 
 // 跳跃游戏 II （亚马逊、华为、字节跳动在半年内面试中考过）
+func jump(nums []int) (step int) {
+	n := len(nums)
+	if n == 1 {
+		return 0
+	}
+	// 因为已经确定终点可达，所以可以直接遍历
+	// 只要达到 n-2处，必定可达到终点
+	maxPos := 0
+	reachable := 0
+	for i := 0; i < n-1; i++ {
+		maxPos = getMax(maxPos, i+nums[i])
+		if i == reachable {
+			reachable = maxPos
+			step++
+		}
+	}
+	return step
+}
