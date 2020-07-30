@@ -6,8 +6,6 @@ import (
 )
 
 func main() {
-	// 最小路径和
-
 	// 解码方法
 	// fmt.Println(numDecodings("0"))    // 0
 	// fmt.Println(numDecodings("0001")) // 0
@@ -24,12 +22,6 @@ func main() {
 
 	// 任务调度器
 	fmt.Println(leastInterval([]byte{'A', 'A', 'A', 'B', 'B', 'B'}, 2)) // 8
-
-	// 回文子串
-
-	// 最长有效括号
-
-	// 编辑距离
 
 	// 矩形区域不超过 K 的最大数值和
 
@@ -48,6 +40,27 @@ func main() {
 /* 中等 */
 
 // 最小路径和（亚马逊、高盛集团、谷歌在半年内面试中考过）
+func minPathSum(grid [][]int) int {
+	if len(grid) == 0 || len(grid[0]) == 0 {
+		return 0
+	}
+	m, n := len(grid), len(grid[0])
+	dp := make([]int, n)
+	dp[0] = grid[0][0]
+	for i := 1; i < n; i++ {
+		dp[i] = dp[i-1] + grid[0][i]
+	}
+	for i := 1; i < m; i++ {
+		for j := 0; j < n; j++ {
+			if j == 0 {
+				dp[j] = grid[i][j] + dp[j]
+			} else {
+				dp[j] = getMin(dp[j], dp[j-1]) + grid[i][j]
+			}
+		}
+	}
+	return dp[n-1]
+}
 
 // 解码方法（亚马逊、Facebook、字节跳动在半年内面试中考过）
 func numDecodings(s string) (cur int) {
@@ -162,6 +175,55 @@ func (t *taskList) Swap(i, j int) {
 }
 
 // 回文子串（Facebook、苹果、字节跳动在半年内面试中考过）
+// 法一：暴力，best
+// 以s中的每个字符为回文串中点，检查计算
+func countSubstrings1(s string) (count int) {
+	n := len(s)
+	if n <= 1 {
+		return
+	}
+	for i := 0; i < n; i++ {
+		count++
+		// 回文串长度为奇数
+		count += extendSubString(s, n, i-1, i+1)
+		// 回文串长度为偶数，以s[i]为中点左侧字符
+		count += extendSubString(s, n, i, i+1)
+	}
+	return count
+}
+func extendSubString(s string, n, left, right int) (count int) {
+	for left >= 0 && right < n && s[left] == s[right] {
+		count++
+		left--
+		right++
+	}
+	return count
+}
+
+// 法二：动态规划
+// 长度更长的回文串总是在长度稍短的回文串的基础上形成
+// dp[i][j]表示 s[i:j]是否为回文子串
+// dp[i][j]在 dp[i+1][j-1]的基础上判断扩展
+func countSubstrings2(s string) (count int) {
+	n := len(s)
+	if n <= 1 {
+		return
+	}
+	dp := make([][]bool, n)
+	for k := range dp {
+		dp[k] = make([]bool, n)
+	}
+	for j := 0; j < n; j++ { // j包裹i循环是为了保证 dp[i+1][j-1] 已经算出
+		for i := j; i >= 0; i-- {
+			if s[i] == s[j] && (j-i < 2 || dp[i+1][j-1]) {
+				dp[i][j] = true
+				count++
+			}
+		}
+	}
+
+	return count
+}
 
 /* 困难 */
 
@@ -262,6 +324,38 @@ func longestValidParentheses3(s string) (maxLen int) {
 }
 
 // 编辑距离（字节跳动、亚马逊、谷歌在半年内面试中考过）
+func minDistance(word1 string, word2 string) int {
+	l1, l2 := len(word1), len(word2)
+	if l1 == 0 {
+		return l2
+	} else if l2 == 0 {
+		return l1
+	}
+	// init
+	// 初始化 word1[:0……l1]到word2[:0]的编辑距离
+	dp := make([][]int, l1+1)
+	for i := 0; i <= l1; i++ {
+		dp[i] = make([]int, l2+1)
+		dp[i][0] = i
+	}
+	// 初始化 word1[:0]到word2[:0……l2]的编辑距离
+	for j := 0; j <= l2; j++ {
+		dp[0][j] = j
+	}
+
+	// 开始递推
+	for i := 1; i <= l1; i++ {
+		for j := 1; j <= l2; j++ {
+			if word1[i-1] == word2[j-1] {
+				dp[i][j] = dp[i-1][j-1]
+			} else {
+				dp[i][j] = getMin(getMin(dp[i-1][j-1], dp[i-1][j]), dp[i][j-1]) + 1
+			}
+		}
+	}
+
+	return dp[l1][l2]
+}
 
 // 矩形区域不超过 K 的最大数值和（谷歌在半年内面试中考过）
 
