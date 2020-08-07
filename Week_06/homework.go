@@ -26,12 +26,6 @@ func main() {
 
 	// 矩形区域不超过 K 的最大数值和
 
-	// 学生出勤记录 II
-
-	// 最小覆盖子串
-
-	// 戳气球
-
 }
 
 /* 中等 */
@@ -462,10 +456,117 @@ func splitArray2(nums []int, m int) (result int) {
 }
 
 // 学生出勤记录 II （谷歌在半年内面试中考过）
+// 法一：回溯，时间复杂度高，无法AC
+// 法二：动态规划
+// 将可能性分为6种：
+// a 不含A的LL结尾，可添加A P
+// b 不含A的L结尾，倒数第二位不是L，可添加A L P
+// c 不含A的非L结尾，可添加A L P
+// d 含A的LL结尾，可添加P
+// e 含A的L结尾，倒数第二位不为L，可添加 L P
+// f 含A的非L结尾，可添加 L P
+func checkRecord(n int) int {
+	// 初始化n=1
+	a, b, c, d, e, f := 0, 1, 1, 0, 0, 1
+	// i 本该从 2 开始
+	// 但由于最后的结果是(a + b + c + d + e + f) % 1000000007
+	// f恰好是a-f的和，所以直接多循环一遍
+	for i := 1; i <= n; i++ {
+		a, b, c = b, c, (a+b+c)%1000000007
+		d, e, f = e, f, (d+e+f+c)%1000000007
+	}
+
+	return f
+}
 
 // 最小覆盖子串（Facebook 在半年内面试中常考）
+// 法一：暴力搜索，时间复杂度高，O(m*n)
+// 法二：滑动窗口
+// 先确定窗口大小：固定左侧，右侧滑动，当s包含t的所有元素时，就确定了初始窗口大小
+// 当窗口大小确定时，开始记录窗口大小并试图移动左侧窗口
+func minWindow(s string, t string) (result string) {
+	ls, lt := len(s), len(t)
+	if ls < lt || lt == 0 || ls == 0 {
+		return
+	}
+	var need, window [128]int // map是一种更通用的做法，但数组的效率更高
+	for i := 0; i < lt; i++ {
+		need[t[i]]++ // 记录需要的元素及数量
+	}
+	needTypeLen := 0 // 记录需要的不同元素的数量
+	for i := 0; i < 128; i++ {
+		if need[i] > 0 {
+			needTypeLen++
+		}
+	}
+	valid := 0
+	left, right := 0, 0
+	for right < ls {
+		c := s[right]
+		right++
+		if need[c] > 0 {
+			window[c]++
+			if window[c] == need[c] {
+				valid++
+			}
+		}
+		// 窗口包含所有所需元素时，进行记录，并移动左侧边界
+		for valid == needTypeLen {
+			// 计算长度
+			if result == "" || right-left < len(result) {
+				result = s[left:right]
+			}
+			// 滑动左侧边界
+			c = s[left]
+			if need[c] > 0 {
+				if need[c] == window[c] {
+					valid--
+				}
+				window[s[left]]--
+			}
+			left++
+		}
+	}
+
+	return
+}
 
 // 戳气球（亚马逊在半年内面试中考过）
+// 法一：回溯，时间复杂度高，略
+// 法二：动态规划
+// dp[i][j] 表示，戳破气球 i 和气球 j 之间（不含 i、 j）的所有气球，可获得的最高分数。
+// 设 nums (i, j)间最后一个被戳的气球是 k，则 dp[i][j] = dp[i][k] + nums[k]*nums[i]*nums[j]+dp[k][j]
+// 固定 i，j，对 k 进行枚举
+func maxCoins(nums []int) int {
+	n := len(nums)
+	if n == 0 {
+		return 0
+	}
+	if n == 1 {
+		return nums[0]
+	}
+	balls := make([]int, n+2)
+	balls[0] = 1
+	copy(balls[1:], nums)
+	balls[n+1] = 1
+
+	dp := make([][]int, n+2)
+	for i := 0; i < n+2; i++ {
+		dp[i] = make([]int, n+2)
+	}
+	// 对于任意的 dp[i][j]，需要满足 dp[i][k] 和 dp[k][j]已被计算
+	// i < k < j
+	// 因此 i 需要倒序计算，j从左到右计算
+	for i := n + 1; i >= 0; i-- {
+		for j := i + 2; j < n+2; j++ {
+			for k := i + 1; k < j; k++ {
+				dp[i][j] = getMax(dp[i][k]+balls[k]*balls[i]*balls[j]+dp[k][j], dp[i][j])
+			}
+		}
+	}
+
+	return dp[0][n+1]
+}
 
 /* helper */
 func getMax(a, b int) int {
