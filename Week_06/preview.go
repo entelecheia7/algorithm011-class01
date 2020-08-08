@@ -12,7 +12,6 @@ func main() {
 		{'a', 'a', 'a', 'a'},
 	}, []string{"aaaaaaaaaaaa", "aaaaaaaaaaaaa", "aaaaaaaaaaab"})) // ["aaaaaaaaaaaa"]
 
-	// 岛屿数量
 	// 有效的数独
 	// N 皇后
 	// 单词接龙
@@ -84,7 +83,7 @@ func findWords(board [][]byte, words []string) (result []string) {
 	find := make(map[string]bool)
 	for i := 0; i < m; i++ {
 		for j := 0; j < n; j++ {
-			findWordsBackTracing(board, used, []byte{}, i, j, m, n, trie, find)
+			backTracing(board, used, []byte{}, i, j, m, n, trie, find)
 		}
 	}
 	for k := range find {
@@ -95,7 +94,7 @@ func findWords(board [][]byte, words []string) (result []string) {
 }
 
 // 为了去重，结果使用一个map
-func findWordsBackTracing(board [][]byte, used [][]bool, cur []byte, i, j, m, n int, trie *TrieNode, find map[string]bool) {
+func backTracing(board [][]byte, used [][]bool, cur []byte, i, j, m, n int, trie *TrieNode, find map[string]bool) {
 	k := board[i][j] - 'a'
 	if trie.next[k] == nil {
 		return
@@ -107,53 +106,75 @@ func findWordsBackTracing(board [][]byte, used [][]bool, cur []byte, i, j, m, n 
 	}
 
 	if i > 0 && !used[i-1][j] {
-		findWordsBackTracing(board, used, cur, i-1, j, m, n, trie.next[k], find)
+		backTracing(board, used, cur, i-1, j, m, n, trie.next[k], find)
 	}
 	if i < m-1 && !used[i+1][j] {
-		findWordsBackTracing(board, used, cur, i+1, j, m, n, trie.next[k], find)
+		backTracing(board, used, cur, i+1, j, m, n, trie.next[k], find)
 	}
 	if j > 0 && !used[i][j-1] {
-		findWordsBackTracing(board, used, cur, i, j-1, m, n, trie.next[k], find)
+		backTracing(board, used, cur, i, j-1, m, n, trie.next[k], find)
 	}
 	if j < n-1 && !used[i][j+1] {
-		findWordsBackTracing(board, used, cur, i, j+1, m, n, trie.next[k], find)
+		backTracing(board, used, cur, i, j+1, m, n, trie.next[k], find)
 	}
 	cur = cur[:len(cur)-1]
 	used[i][j] = false
 }
 
 func buildTrieTree(words []string) *TrieNode {
-	trie := &TrieNode{
-		char: '/',
-	}
+	trie := &TrieNode{}
 	for _, word := range words {
 		p := trie
-		lastIndex := len(word) - 1
-		for i := 0; i <= lastIndex; i++ {
-			k := word[i] - 'a'
-			if p.next[k] == nil {
-				p.next[k] = &TrieNode{
-					char: word[i],
-				}
+		for _, char := range word {
+			c := char - 'a'
+			if p.next[c] == nil {
+				p.next[c] = &TrieNode{}
 			}
-			if i == lastIndex {
-				p.next[k].isEnd = true
-			} else {
-				p = p.next[k]
-			}
-
+			p = p.next[c]
 		}
+		p.isEnd = true
 	}
 	return trie
 }
 
 type TrieNode struct {
-	char  byte
 	isEnd bool
 	next  [26]*TrieNode
 }
 
 // 岛屿数量
+// 法一：dfs
+func numIslands(grid [][]byte) (count int) {
+	if len(grid) == 0 || len(grid[0]) == 0 {
+		return 0
+	}
+	visited := make([][]bool, len(grid))
+	for k := range visited {
+		visited[k] = make([]bool, len(grid[0]))
+	}
+	for i, row := range grid {
+		for j, v := range row {
+			if !visited[i][j] && v == '1' {
+				// 第一次发现一个岛的坐标，递归标记周围是‘1’的坐标为已访问
+				markIsland(grid, i, j, visited)
+				count++
+			}
+		}
+	}
+	return count
+}
+
+func markIsland(grid [][]byte, x, y int, visited [][]bool) {
+	if x < 0 || y < 0 || x >= len(grid) || y >= len(grid[0]) || visited[x][y] || grid[x][y] == '0' {
+		return
+	}
+	visited[x][y] = true
+	markIsland(grid, x+1, y, visited)
+	markIsland(grid, x-1, y, visited)
+	markIsland(grid, x, y+1, visited)
+	markIsland(grid, x, y-1, visited)
+}
+
 // 有效的数独
 // N 皇后
 // 单词接龙

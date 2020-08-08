@@ -1,1 +1,63 @@
-学习笔记
+# Trie树
+Trie树常用于统计和排序大量字符串，适用于自动输入补全、屏蔽字检测等场景。  
+在叶子结点可以存储单词的频次，以优化自动输入补全等功能。  
+字符集比较小、字符串前缀重合多的情况比较适合使用trie树结构。  
+
+单词搜索2的解题步骤和时间复杂度如下：
+1. 根据输入的字符串列表words构建trie树。需要遍历所有字符串，以n表示words数量，k表示字符串平均长度，这部分的时间复杂度是O(kn)。
+2. 根据board进行回溯查找，这部分的时间复杂度取决于树的深度，以k表示words的平均长度，以m表示board中的字符个数，则这部分的时间复杂度是O(km)。
+综上，整体的时间复杂度为O(k*(m+n))。
+
+# 并查集
+并查集是一种主要用于解决“动态连通性”问题的数据结构，用来解决快速判断两个元素是否在同一个集合的问题。比如leetcode的岛屿数量问题。  
+并查集支持以下基本操作：
+- 创建一个并查集，其中包含n个单元素集合。
+- 合并元素x和元素y的集合，前提是集合x和集合y不相交，相交则不需要合并。
+- 找到元素x所在的集合。该操作可以用于判断两个元素是否位于一个合集。
+它在数据结构上是一颗树。  
+代码模板如下：
+```
+type unionFind struct {
+	parent []int
+	count  int
+}
+
+func NewUnionFind(n int) *unionFind {
+	p := make([]int, n)
+	for i := 0; i < n; i++ {
+		p[i] = i
+	}
+
+	return &unionFind{
+		parent: p,
+		count:  n,
+	}
+}
+
+// 返回集合的根元素
+func (this unionFind) find(p int) int {
+	root := p
+	for root != this.parent[root] {
+		root = this.parent[root]
+	}
+	// 压缩路径
+	for p != this.parent[p] {
+		next := this.parent[p]
+		this.parent[p] = root
+		p = next
+	}
+	return root
+}
+func (this *unionFind) union(x, y int) {
+	rootX := this.find(x)
+	rootY := this.find(y)
+	if rootX == rootY {
+		return
+	}
+	this.parent[rootX] = rootY
+	this.count--
+}
+func (this unionFind) getCount() int {
+	return this.count
+}
+```
