@@ -11,13 +11,10 @@ func main() {
 		{'0', '0', '0', '0', '0'},
 	}))
 	// 被围绕的区域（亚马逊、eBay、谷歌在半年内面试中考过）
-	// 有效的数独（亚马逊、苹果、微软在半年内面试中考过）
-	// 括号生成（亚马逊、Facebook、字节跳动在半年内面试中考过）
 	// 单词接龙（亚马逊、Facebook、谷歌在半年内面试中考过）
 	// 最小基因变化（谷歌、Twitter、腾讯在半年内面试中考过）
 
 	/* 困难 */
-	// N 皇后（亚马逊、苹果、字节跳动在半年内面试中考过）
 	// 解数独（亚马逊、华为、微软在半年内面试中考过）
 
 }
@@ -238,8 +235,60 @@ func numIslands2(grid [][]byte) (count int) {
 }
 
 // 被围绕的区域（亚马逊、eBay、谷歌在半年内面试中考过）
+
 // 有效的数独（亚马逊、苹果、微软在半年内面试中考过）
+// 位运算，使用一个9位的二进制数来判断一个数字是否被使用过，0为未使用，1为已使用
+func isValidSudoku(board [][]byte) bool {
+	var row, column, squ [9]int
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			if board[i][j] != '.' {
+				squNo := i/3*3 + j/3
+				num := int(board[i][j] - '1')
+				if isUsedNum(num, row[i]) || isUsedNum(num, squ[squNo]) || isUsedNum(num, column[j]) {
+					return false
+				}
+				row[i] = row[i] ^ (1 << num)
+				column[j] = column[j] ^ (1 << num)
+				squ[squNo] = squ[squNo] ^ (1 << num)
+			}
+		}
+	}
+	return true
+}
+
+// set表示9位二进制数，n表示需要判断使用的数字
+func isUsedNum(n, set int) bool {
+	if ((set >> n) & 1) == 1 {
+		return true
+	}
+	return false
+}
+
 // 括号生成（亚马逊、Facebook、字节跳动在半年内面试中考过）
+func generateParenthesis(n int) (result []string) {
+	if n == 0 {
+		return nil
+	}
+	cur := make([]byte, n*2)
+	generateHelper(n, n, cur, 0, &result)
+	return result
+}
+func generateHelper(left, right int, cur []byte, i int, result *[]string) {
+	if left == 0 && right == 0 {
+		*result = append(*result, string(cur))
+		return
+	}
+	if left > 0 {
+		cur[i] = '('
+		generateHelper(left-1, right, cur, i+1, result)
+	}
+	if right > left {
+		cur[i] = ')'
+		generateHelper(left, right-1, cur, i+1, result)
+	}
+}
+
 // 单词接龙（亚马逊、Facebook、谷歌在半年内面试中考过）
 // 最小基因变化（谷歌、Twitter、腾讯在半年内面试中考过）
 
@@ -312,4 +361,55 @@ type TrieNode struct {
 }
 
 // N 皇后（亚马逊、苹果、字节跳动在半年内面试中考过）
+func solveNQueens(n int) (result [][]string) {
+	board := make([][]byte, n)
+	tpl := make([]byte, n)
+	for i := 0; i < n; i++ {
+		tpl[i] = '.'
+	}
+	for k := range board {
+		board[k] = make([]byte, n)
+		copy(board[k], tpl)
+	}
+	nQueensHelper(board, n, 0, &result)
+	return result
+}
+func nQueensHelper(board [][]byte, n, row int, result *[][]string) {
+	if row == n {
+		tmp := make([]string, n)
+		for i, r := range board {
+			tmp[i] = string(r)
+		}
+		*result = append(*result, tmp)
+		return
+	}
+	for col := 0; col < n; col++ {
+		if checkPos(board, n, row, col) {
+			board[row][col] = 'Q'
+			nQueensHelper(board, n, row+1, result)
+			board[row][col] = '.'
+		}
+	}
+}
+func checkPos(board [][]byte, n, row, colomn int) bool {
+	if row == 0 {
+		return true
+	}
+	leftup, rightup := colomn-1, colomn+1
+	for i := row - 1; i >= 0; i-- {
+		if board[i][colomn] == 'Q' {
+			return false
+		}
+		if leftup >= 0 && board[i][leftup] == 'Q' {
+			return false
+		}
+		if rightup < n && board[i][rightup] == 'Q' {
+			return false
+		}
+		leftup--
+		rightup++
+	}
+	return true
+}
+
 // 解数独（亚马逊、华为、微软在半年内面试中考过）
