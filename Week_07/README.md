@@ -14,7 +14,8 @@ Trie树常用于统计和排序大量字符串，适用于自动输入补全、�
 - 创建一个并查集，其中包含n个单元素集合。
 - 合并元素x和元素y的集合，前提是集合x和集合y不相交，相交则不需要合并。
 - 找到元素x所在的集合。该操作可以用于判断两个元素是否位于一个合集。
-它在数据结构上是一颗树。  
+它在数据结构上是一颗树。 
+
 代码模板如下：
 ```
 type unionFind struct {
@@ -71,3 +72,36 @@ func (this unionFind) getCount() int {
 除了这两个方向，还有更高级的搜索算法：
 - 双向搜索
 - 启发式搜索（A*算法）：根据优先队列进行搜索
+## 双向BFS
+代码模板：
+```
+// 1.定义beginQ、endQ
+// 2.定义beginVisited、endVisited
+// 3.开始搜索
+for len(beginQ) > 0 && len(endQ) > 0 {
+	// 选择更少的数量进行搜索
+	if len(beginQ) > len(endQ) {
+		beginQ, endQ = endQ, beginQ
+		beginVisited, endVisited = endVisited, beginVisited
+	}
+	size := len(beginQ)
+	for i:= 0; i < size;i++ {
+		// 处理当前条目，得到下一层
+		……
+		if !beginVisited[next] {
+			if endVisited[next] {
+				// 处理结果，返回
+				return 
+			}
+			beginQ = append(beginQ, next)
+			beginVisited[next] = true
+		}
+	}
+
+	// reverse
+	// 根据具体题目这一步骤可以省略
+	beginQ, endQ = endQ, beginQ
+	beginVisited, endVisited = endVisited, beginVisited
+}
+
+```
