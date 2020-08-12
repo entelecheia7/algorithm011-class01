@@ -105,3 +105,24 @@ for len(beginQ) > 0 && len(endQ) > 0 {
 }
 
 ```
+## A*搜索
+A* 搜索的关键在于估价函数 h(n)，它用于评价哪些结点最可能是我们想找到的结点。h(n) 返回一个非负实数，表示从结点 n 到模板结点路径的估计成本，值越大说明优先级越大。  
+代码模板：
+```
+func astarSearch(graph [][]int, start, end int) {
+	pq := newPriorityQueue()
+	pq.add([2]int{0, 0})
+	// init visited
+	……
+	visited[0][0] = true
+
+	for pq.Len() > 0 {
+		cur := pq.pop()
+		visited[cur] = true
+		nextStep := getNextStep(graph, cur, visited)
+		for _, next := range nextStep {
+			pq.push(next)
+		}
+	}
+}
+```

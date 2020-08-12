@@ -10,9 +10,6 @@ func main() {
 		{'1', '1', '0', '0', '0'},
 		{'0', '0', '0', '0', '0'},
 	}))
-	// 被围绕的区域（亚马逊、eBay、谷歌在半年内面试中考过）
-	// 单词接龙（亚马逊、Facebook、谷歌在半年内面试中考过）
-	// 最小基因变化（谷歌、Twitter、腾讯在半年内面试中考过）
 
 	/* 困难 */
 	// 解数独（亚马逊、华为、微软在半年内面试中考过）
@@ -235,6 +232,94 @@ func numIslands2(grid [][]byte) (count int) {
 }
 
 // 被围绕的区域（亚马逊、eBay、谷歌在半年内面试中考过）
+// 法一：dfs，类似200.岛屿数量问题
+// 遍历board，如果在边界上遇到O，递归标记连通的点O为V
+func solve1(board [][]byte) {
+	if len(board) <= 2 || len(board[0]) <= 2 {
+		return
+	}
+	m, n := len(board), len(board[0])
+	// 标记边界的O
+	rows := []int{0, m - 1}
+	colomns := []int{0, n - 1}
+	for _, i := range rows {
+		for j := 0; j < n; j++ {
+			if board[i][j] == 'O' {
+				markBorder(board, i, j, m, n)
+			}
+		}
+	}
+	for _, j := range colomns {
+		for i := 1; i < m-1; i++ {
+			if board[i][j] == 'O' {
+				markBorder(board, i, j, m, n)
+			}
+		}
+	}
+	// 遍历处理所有的O
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			switch board[i][j] {
+			case 'O':
+				board[i][j] = 'X'
+			case 'V':
+				board[i][j] = 'O'
+			}
+		}
+	}
+}
+func markBorder(board [][]byte, i, j, m, n int) {
+	if i < 0 || i == m || j < 0 || j == n || board[i][j] != 'O' {
+		return
+	}
+	board[i][j] = 'V'
+	markBorder(board, i+1, j, m, n)
+	markBorder(board, i-1, j, m, n)
+	markBorder(board, i, j+1, m, n)
+	markBorder(board, i, j-1, m, n)
+}
+
+// 法二：并查集
+// 将边界的 O 的集合进行统计，然后遍历board，将不属于边界集合的 O 更改为 X
+func solve2(board [][]byte) {
+	if len(board) <= 2 || len(board[0]) <= 2 {
+		return
+	}
+	m, n := len(board), len(board[0])
+	border := m * n
+	parent := make([]int, border+1)
+	for i := 0; i <= border; i++ {
+		parent[i] = i
+	}
+	rows := []int{0, m - 1}
+	colomns := []int{0, n - 1}
+	for _, row := range rows {
+		for j := 0; j < n; j++ {
+			union(board, row, j, m, n, parent, border)
+		}
+	}
+	for _, colomn := range colomns {
+		for i := 1; i < m-1; i++ {
+			union(board, i, colomn, m, n, parent, border)
+		}
+	}
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			if board[i][j] == 'O' && parent[i*n+j] != border {
+				board[i][j] = 'X'
+			}
+		}
+	}
+}
+func union(board [][]byte, i, j, m, n int, parent []int, border int) {
+	if i < 0 || i >= m || j < 0 || j >= n || board[i][j] != 'O' || parent[i*n+j] == border {
+		return
+	}
+	parent[i*n+j] = border
+	for _, diff := range around {
+		union(board, i+diff[0], j+diff[1], m, n, parent, border)
+	}
+}
 
 // 有效的数独（亚马逊、苹果、微软在半年内面试中考过）
 // 位运算，使用一个9位的二进制数来判断一个数字是否被使用过，0为未使用，1为已使用
@@ -290,7 +375,98 @@ func generateHelper(left, right int, cur []byte, i int, result *[]string) {
 }
 
 // 单词接龙（亚马逊、Facebook、谷歌在半年内面试中考过）
+func ladderLength(beginWord string, endWord string, wordList []string) int {
+	wordMap := make(map[string]bool, len(wordList))
+	for _, w := range wordList {
+		wordMap[w] = true
+	}
+	if !wordMap[endWord] {
+		return 0
+	}
+	n := len(beginWord)
+	visitedFromBegin := map[string]bool{beginWord: true}
+	visitedFromEnd := map[string]bool{endWord: true}
+	queueBegin := []string{beginWord}
+	queueEnd := []string{endWord}
+	path := 1
+	var c byte
+	for len(queueBegin) > 0 && len(queueEnd) > 0 {
+		if len(queueBegin) > len(queueEnd) {
+			queueEnd, queueBegin = queueBegin, queueEnd
+			visitedFromBegin, visitedFromEnd = visitedFromEnd, visitedFromBegin
+		}
+		length := len(queueBegin)
+		path++
+		for i := 0; i < length; i++ {
+			cur := []byte(queueBegin[i])
+			for j := 0; j < n; j++ {
+				old := cur[j]
+				for c = 'a'; c <= 'z'; c++ {
+					if cur[j] != c {
+						cur[j] = c
+						nextWord := string(cur)
+						if wordMap[nextWord] && !visitedFromBegin[nextWord] {
+							if visitedFromEnd[nextWord] {
+								return path
+							}
+							queueBegin = append(queueBegin, nextWord)
+							visitedFromBegin[nextWord] = true
+						}
+					}
+				}
+				cur[j] = old
+			}
+		}
+		queueBegin = queueBegin[length:]
+	}
+	return 0
+}
+
 // 最小基因变化（谷歌、Twitter、腾讯在半年内面试中考过）
+// 双向BFS
+func minMutation(start string, end string, bank []string) (level int) {
+	bankMap := make(map[string]bool, len(bank))
+	for _, s := range bank {
+		bankMap[s] = true
+	}
+	if !bankMap[end] {
+		return -1
+	}
+	visitedBegin, visitedEnd := map[string]bool{start: true}, map[string]bool{end: true}
+	beginQ, endQ := []string{start}, []string{end}
+	material := []byte{'A', 'C', 'G', 'T'}
+
+	for len(beginQ) > 0 && len(endQ) > 0 {
+		if len(beginQ) > len(endQ) {
+			beginQ, endQ = endQ, beginQ
+			visitedBegin, visitedEnd = visitedEnd, visitedBegin
+		}
+		size := len(beginQ)
+		level++
+		for i := 0; i < size; i++ {
+			cur := []byte(beginQ[i])
+			for j := 0; j < 8; j++ {
+				old := cur[j]
+				for _, c := range material {
+					if c != old {
+						cur[j] = c
+						next := string(cur)
+						if bankMap[next] && !visitedBegin[next] {
+							if visitedEnd[next] {
+								return level
+							}
+							beginQ = append(beginQ, next)
+							visitedBegin[next] = true
+						}
+					}
+				}
+				cur[j] = old
+			}
+		}
+		beginQ = beginQ[size:]
+	}
+	return -1
+}
 
 /* 困难 */
 // 单词搜索 II （亚马逊、微软、苹果在半年内面试中考过）
