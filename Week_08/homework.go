@@ -3,6 +3,9 @@ package main
 import "fmt"
 
 func main() {
+	nums := []int{4, 26, 8, 2, 1, 0, -4}
+	selectionSort(nums, 7)
+	fmt.Println(nums)
 	// 有效的字母异位词（Facebook、亚马逊、谷歌在半年内面试中考过）
 
 	// 力扣排行榜（Bloomberg 在半年内面试中考过）
@@ -17,6 +20,19 @@ func main() {
 	/* 下周预习题目 */
 	//     不同路径
 	//     最小路径和
+}
+func selectionSort(nums []int, n int) {
+	pos := 0 // 待排序数组起始位置
+	for pos < n {
+		minest := pos
+		for i := pos + 1; i < n; i++ {
+			if nums[i] < nums[minest] {
+				minest = i
+			}
+		}
+		nums[pos], nums[minest] = nums[minest], nums[pos]
+		pos++
+	}
 }
 
 /* 简单 */

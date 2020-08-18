@@ -35,9 +35,85 @@ a ^ b ^ c = a ^ (b ^ c) = (a ^ b) ^ c
 布隆过滤器的应用场景有：数据库缓存层、垃圾邮件过滤、推荐去重、分布式系统判断数据是否存在于当前节点。
 
 # 排序算法
-1. 冒泡排序
-2. 插入排序
-3. 选择排序
+排序大致分为两类，比较类排序和非比较类排序。  
+比较类排序通过比较决定元素间的相对次序，时间复杂度最好是 O(logn)，也称为非线性时间比较类排序。  
+非比较类排序不通过比较来决定元素间的相对次序，时间复杂度是线性的，因此也称为线性时间比较类排序。  
+比较类排序包括：
+- 交换排序
+    - 冒泡排序
+    - 快速排序
+- 插入排序
+    - 插入排序
+    - 希尔排序
+- 选择排序
+    - 选择排序
+    - 堆排序
+- 归并排序
+    - 二路归并排序
+    - 多路归并排序
+
+非比较类排序包括：
+- 计数排序
+- 桶排序
+- 基数排序
+
+## 选择排序
+每次找最小值，放到待排序数组的起始位置。
+```
+func selectionSort(nums []int, n int) {
+	pos := 0 // 待排序数组起始位置
+	for pos < n {
+		minest := pos
+		for i := pos + 1; i < n; i++ {
+			if nums[i] < nums[minest] {
+				minest = i
+			}
+		}
+		nums[pos], nums[minest] = nums[minest], nums[pos]
+		pos++
+	}
+}
+```
+
+## 插入排序
+对于未排序数据，在已排序序列中从后往前扫描，找到相应位置插入。
+```
+func insertionSort(nums []int, n int) {
+	pos := 1 // 未排序数据的起始位置
+	for pos < n {
+		i := pos - 1
+		cur := nums[pos] // 本次循环的待插入数据
+		for i >= 0 && nums[i] > cur {
+			nums[i+1] = nums[i]
+			i--
+		}
+		nums[i+1] = cur
+		pos++
+	}
+}
+```
+
+## 冒泡排序
+多层循环，每次检查相邻元素的顺序，逆序则交换。
+```
+func BubbleSort(nums []int, n int) {
+    for j := 0; j < n-1; j++ {
+        flag := true
+        for i := 0; i < n-1; i++ {
+            if nums[i] > nums[i+1] {
+                falg := false
+                nums[i], nums[i+1] = nums[i+1], nums[i]
+            }
+        }
+        if flag {
+            break
+        }
+    }
+}
+
+```
+
+
 4. 归并排序
 5. 快速排序
 6. 桶排序
