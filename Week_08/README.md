@@ -101,7 +101,7 @@ func BubbleSort(nums []int, n int) {
         flag := true
         for i := 0; i < n-1; i++ {
             if nums[i] > nums[i+1] {
-                falg := false
+                falg = false
                 nums[i], nums[i+1] = nums[i+1], nums[i]
             }
         }
@@ -113,9 +113,120 @@ func BubbleSort(nums []int, n int) {
 
 ```
 
+## 快速排序
+取一个基准元素，将小元素放在基准左侧，大元素放右侧，然后递归地对两侧数组进行快排。
+```
+func quickSort(nums []int, left, right int) {
+	if left >= right {
+		return
+	}
+	p := partition(nums, left, right)
+	quickSort(nums, left, p-1)
+	quickSort(nums, p+1, right)
+}
+func partition(nums []int, left, right int) (pivot int) {
+	standard := nums[right]
+	smaller := left // 小于standard的元素的放置位置
+	for i := left; i < right; i++ {
+		if nums[i] < standard {
+			nums[i], nums[smaller] = nums[smaller], nums[i]
+			smaller++
+		}
+	}
+	nums[smaller], nums[right] = nums[right], nums[smaller]
+	return smaller
+}
+```
 
-4. 归并排序
-5. 快速排序
-6. 桶排序
-7. 计数排序
-8. 基数排序
+## 归并排序
+把数组一分为二，对两个子数组采用归并排序，再将排序好的子数组进行合并。
+```
+func mergeSort(nums []int, left, right int) {
+	if left >= right {
+		return
+	}
+	mid := left + ((right - left) >> 1)
+	mergeSort(nums, left, mid)
+	mergeSort(nums, mid+1, right)
+	merge(nums, left, mid, right)
+}
+func merge(nums []int, left, mid, right int) {
+	tmp := make([]int, right-left+1)
+	i, j := left, mid+1
+	k := 0
+	for i <= mid && j <= right {
+		if nums[i] <= nums[j] {
+			tmp[k] = nums[i]
+			i++
+		} else {
+			tmp[k] = nums[j]
+			j++
+		}
+		k++
+	}
+	for i <= mid {
+		tmp[k] = nums[i]
+		i++
+		k++
+	}
+	for j <= right {
+		tmp[k] = nums[j]
+		j++
+		k++
+	}
+	for a := 0; a < len(tmp); a++ {
+		nums[left+a] = tmp[a]
+	}
+    // 或使用 copy(nums[left:right+1], tmp)
+}
+```
+
+## 堆排序
+构建一个小顶堆或大顶堆，再依次取堆顶元素
+```
+func heapSort(nums []int, n int) {
+	if n == 0 {
+		return
+	}
+	for i := n/2 - 1; i >= 0; i-- {
+		heapify(nums, n, i)
+	}
+	for j := n - 1; j >= 0; j-- {
+		nums[0], nums[j] = nums[j], nums[0]
+		heapify(nums, j, 0)
+	}
+}
+
+// 大顶堆，自下而上堆化
+func heapify(nums []int, n, i int) {
+	for {
+		maxPos := i
+		// 左子节点
+		left := 2*i + 1
+		if left < n && nums[maxPos] < nums[left] {
+			maxPos = left
+		}
+		// 右子节点
+		right := left + 1
+		if right < n && nums[maxPos] < nums[right] {
+			maxPos = right
+		}
+		if maxPos == i {
+			break
+		}
+		nums[i], nums[maxPos] = nums[maxPos], nums[i]
+		i = maxPos
+	}
+}
+```
+
+## 计数排序
+将待排序数组使用额外的数组统计每个元素出现的频次，再按照顺序输出。
+这要求待排序数据是整数，且范围不大。
+
+## 桶排序
+计数排序的升级版。将数据划分到数量有限的桶，对每个桶的数据进行排序，最后进行合并。
+
+## 基数排序
+取得数组的最大位数。按照位来排序，先排个位，再排十位，以此类推。
+这要求待排序数据是整数。
