@@ -3,9 +3,6 @@ package main
 import "fmt"
 
 func main() {
-	// 有效的字母异位词（Facebook、亚马逊、谷歌在半年内面试中考过）
-
-	// 力扣排行榜（Bloomberg 在半年内面试中考过）
 	// 合并区间（Facebook、字节跳动、亚马逊在半年内面试中常考）
 
 	// N 皇后（字节跳动、亚马逊、百度在半年内面试中考过）
@@ -68,6 +65,25 @@ func relativeSortArray(arr1 []int, arr2 []int) (result []int) {
 }
 
 // 有效的字母异位词（Facebook、亚马逊、谷歌在半年内面试中考过）
+func isAnagram(s string, t string) bool {
+	ls, lt := len(s), len(t)
+	if ls != lt {
+		return false
+	}
+	m := make([]int, 26)
+	for i := 0; i < ls; i++ {
+		if s[i] != t[i] {
+			m[s[i]-'a']++
+			m[t[i]-'a']--
+		}
+	}
+	for _, v := range m {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
+}
 
 /* 中等 */
 // LRU 缓存机制（亚马逊、字节跳动、Facebook、微软在半年内面试中常考）
@@ -150,6 +166,92 @@ func (this *LRUCache) prepend(node *TwoWayListNode) {
 }
 
 // 力扣排行榜（Bloomberg 在半年内面试中考过）
+type Leaderboard struct {
+	players map[int]int // playerId =>score
+	scores  []int       // 排好序的score
+}
+
+func Constructor() Leaderboard {
+	return Leaderboard{
+		players: make(map[int]int),
+	}
+}
+
+func (this *Leaderboard) AddScore(playerId int, score int) {
+	if _, exist := this.players[playerId]; exist {
+		oldScore := this.players[playerId]
+		this.players[playerId] += score
+		this.deleteScore(oldScore)
+		this.insertScore(this.players[playerId])
+	} else {
+		this.players[playerId] = score
+		this.insertScore(score)
+	}
+}
+
+func (this *Leaderboard) Top(K int) (scores int) {
+	i := len(this.scores) - 1
+	for K > 0 {
+		scores += this.scores[i]
+		i--
+		K--
+	}
+	return scores
+}
+
+func (this *Leaderboard) Reset(playerId int) {
+	this.deleteScore(this.players[playerId])
+	delete(this.players, playerId)
+}
+
+// score总是存在
+func (this *Leaderboard) deleteScore(score int) {
+	i := this.search(score)
+	this.scores = append(this.scores[:i], this.scores[i+1:]...)
+}
+func (this Leaderboard) search(score int) (index int) {
+	index = -1
+	left, right := 0, len(this.scores)-1
+	for left <= right {
+		mid := left + ((right - left) >> 1)
+		if this.scores[mid] == score {
+			return mid
+		} else if this.scores[mid] < score {
+			left = mid + 1
+		} else {
+			right = mid - 1
+		}
+	}
+	return index
+}
+func (this *Leaderboard) insertScore(score int) {
+	n := len(this.scores)
+	if n == 0 || this.scores[n-1] <= score {
+		this.scores = append(this.scores, score)
+		return
+	} else if this.scores[0] >= score {
+		this.scores = append([]int{score}, this.scores...)
+		return
+	}
+	// 找到小于等于score的最大元素
+	left, right := 0, n-1
+	target := -1
+	for left <= right {
+		mid := left + ((right - left) >> 1)
+		if this.scores[mid] <= score {
+			target = mid
+			left = mid + 1
+		} else {
+			right = mid - 1
+		}
+	}
+	tmp := make([]int, n+1)
+	copy(tmp, this.scores[:target+1])
+	tmp[target+1] = score
+	copy(tmp[target+2:], this.scores[target+1:])
+	this.scores = tmp
+}
+
 // 合并区间（Facebook、字节跳动、亚马逊在半年内面试中常考）
 
 /* 困难 */
