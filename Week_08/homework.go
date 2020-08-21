@@ -3,17 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	// 合并区间（Facebook、字节跳动、亚马逊在半年内面试中常考）
-
 	// N 皇后（字节跳动、亚马逊、百度在半年内面试中考过）
-
 	fmt.Println(totalNQueens(4)) // 2
-
-	// 翻转对（字节跳动在半年内面试中考过）
-
-	/* 下周预习题目 */
-	//     不同路径
-	//     最小路径和
 }
 
 /* 简单 */
@@ -171,7 +162,7 @@ type Leaderboard struct {
 	scores  []int       // 排好序的score
 }
 
-func Constructor() Leaderboard {
+func Constructor2() Leaderboard {
 	return Leaderboard{
 		players: make(map[int]int),
 	}
@@ -253,9 +244,50 @@ func (this *Leaderboard) insertScore(score int) {
 }
 
 // 合并区间（Facebook、字节跳动、亚马逊在半年内面试中常考）
+func merge(intervals [][]int) (merged [][]int) {
+	if len(intervals) <= 1 {
+		return intervals
+	}
+	quickSort(intervals, 0, len(intervals)-1)
+	i := 0
+	merged = make([][]int, 0, len(intervals))
+	for i < len(intervals) {
+		start := intervals[i][0]
+		end := intervals[i][1]
+		for i < len(intervals)-1 && end >= intervals[i+1][0] {
+			i++
+			start = getMin(start, intervals[i][0])
+			end = getMax(end, intervals[i][1])
+		}
+		merged = append(merged, []int{start, end})
+		i++
+	}
+	return merged
+}
+func quickSort(intervals [][]int, left, right int) {
+	if left >= right {
+		return
+	}
+	pivot := partition(intervals, left, right)
+	quickSort(intervals, left, pivot-1)
+	quickSort(intervals, pivot+1, right)
+}
+func partition(intervals [][]int, left, right int) (pivot int) {
+	standard := intervals[right]
+	pos := left // 小于standard元素要放置的地方
+	for i := left; i < right; i++ {
+		if intervals[i][0] < standard[0] {
+			intervals[pos], intervals[i] = intervals[i], intervals[pos]
+			pos++
+		}
+	}
+	intervals[pos], intervals[right] = intervals[right], intervals[pos]
+	return pos
+}
 
 /* 困难 */
 // N 皇后（字节跳动、亚马逊、百度在半年内面试中考过）
+
 // N 皇后 II （亚马逊在半年内面试中考过）
 func totalNQueens(n int) (count int) {
 	if n == 1 {
@@ -285,7 +317,100 @@ func totalNQueensHelper(n, row, col, leftDiagonal, rightDiagonal int, count *int
 }
 
 // 翻转对（字节跳动在半年内面试中考过）
+func reversePairs(nums []int) int {
+	if len(nums) < 2 {
+		return 0
+	}
+	return reversePairsSub(nums, 0, len(nums)-1)
+}
+func reversePairsSub(nums []int, left, right int) (count int) {
+	if left >= right {
+		return 0
+	}
+	mid := left + ((right - left) >> 1)
+	count = reversePairsSub(nums, left, mid) + reversePairsSub(nums, mid+1, right)
+	// 计算两个分区的元素对并合两个并排序区间
+	merged := make([]int, right-left+1)
+	k := 0
+	i := left    // i 代表左区间的下标
+	j := mid + 1 // j 代表右区间的下标，用于计算元素对
+	q := j       // q 代表右区间的下标，用于合并区间
+	for i <= mid {
+		// 计算nums[i] 和右侧区间的元素对个数
+		for j <= right && nums[i] > 2*nums[j] {
+			j++
+		}
+		count += j - (mid + 1)
+		// 进行合并
+		for q <= right && nums[i] >= nums[q] {
+			merged[k] = nums[q]
+			k++
+			q++
+		}
+		merged[k] = nums[i]
+		k++
+		i++
+	}
+	for q <= right {
+		merged[k] = nums[q]
+		k++
+		q++
+	}
+	copy(nums[left:right+1], merged)
+	return count
+}
 
 /* 下周预习题目 */
 //     不同路径
+func uniquePaths(m int, n int) int {
+	if m == 1 || n == 1 {
+		return 1
+	}
+	dp := make([]int, n)
+	dp[0] = 1
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			if j > 0 {
+				dp[j] += dp[j-1]
+			}
+		}
+	}
+	return dp[n-1]
+}
+
 //     最小路径和
+func minPathSum(grid [][]int) int {
+	dp := make([]int, len(grid[0]))
+	for i := 0; i < len(grid); i++ {
+		for j := 0; j < len(grid[0]); j++ {
+			if i == 0 {
+				if j == 0 {
+					dp[j] = grid[i][j]
+				} else {
+					dp[j] = grid[i][j] + dp[j-1]
+				}
+			} else {
+				if j == 0 {
+					dp[j] += grid[i][j]
+				} else {
+					dp[j] = getMin(dp[j], dp[j-1]) + grid[i][j]
+				}
+			}
+		}
+	}
+	return dp[len(grid[0])-1]
+}
+
+func getMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func getMin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
