@@ -1,9 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func main() {
-	// 验证回文字符串 Ⅱ（Facebook 在半年内面试中常考）
+	fmt.Println(validPalindrome2("abca"))
 
 	// 在学习总结中，写出不同路径 2 这道题目的状态转移方程。
 	// 最长上升子序列（字节跳动、亚马逊、微软在半年内面试中考过）
@@ -58,7 +61,7 @@ func reverseStr(s string, k int) string {
 }
 
 // 翻转字符串里的单词（微软、字节跳动、苹果在半年内面试中考过）
-func reverseWords(s string) string {
+func reverseWords1(s string) string {
 	if s == "" {
 		return ""
 	}
@@ -83,7 +86,7 @@ func reverseWords(s string) string {
 }
 
 // 反转字符串中的单词 III （微软、字节跳动、华为在半年内面试中考过）
-func reverseWords(s string) string {
+func reverseWords2(s string) string {
 	n := len(s)
 	s += " "
 	begin := 0 // 单词的起始位置
@@ -153,7 +156,7 @@ func isIsomorphic(s string, t string) bool {
 func isIsomorphic2(s string, t string) bool {
 	n := len(s)
 	for i := 0; i < n; i++ {
-		if strings.Index(s, s[i]) != strings.Index[t[i]] {
+		if strings.Index(s, s[i:i+1]) != strings.Index(t, t[i:i+1]) {
 			return false
 		}
 	}
@@ -175,6 +178,65 @@ func isIsomorphic3(s string, t string) bool {
 }
 
 // 验证回文字符串 Ⅱ（Facebook 在半年内面试中常考）
+// 法一：递归
+func validPalindrome(s string) bool {
+	return validPalindromeHelper(s, false)
+}
+func validPalindromeHelper(s string, deleted bool) bool {
+	left, right := 0, len(s)-1
+	for left < right {
+		if s[left] != s[right] {
+			if deleted {
+				return false
+			}
+			// 删除s[left]或s[right]
+			return validPalindromeHelper(s[left+1:right+1], true) || validPalindromeHelper(s[left:right], true)
+		}
+		left++
+		right--
+	}
+	return true
+}
+
+// 法二：循环
+// best
+func validPalindrome2(s string) (result bool) {
+	left, right := 0, len(s)-1
+	for left < right {
+		if s[left] == s[right] {
+			left++
+			right--
+			continue
+		}
+		// 删除s[left]
+		l, r := left+1, right
+		result = true
+		for l < r {
+			if s[l] != s[r] {
+				result = false
+				break
+			}
+			l++
+			r--
+		}
+		if result {
+			return
+		}
+		// 删除s[right]
+		result = true
+		l, r = left, right-1
+		for l < r {
+			if s[l] != s[r] {
+				result = false
+				break
+			}
+			l++
+			r--
+		}
+		return
+	}
+	return true
+}
 
 /* 中等 */
 
@@ -190,3 +252,11 @@ func isIsomorphic3(s string, t string) bool {
 // 赛车（谷歌在半年内面试中考过）
 // 通配符匹配（Facebook、微软、字节跳动在半年内面试中考过）
 // 不同的子序列（MathWorks 在半年内面试中考过）
+
+/* helper */
+func getMin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
