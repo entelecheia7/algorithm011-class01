@@ -2,22 +2,17 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
 func main() {
 	fmt.Println(validPalindrome2("abca"))
 
-	// 最长上升子序列（字节跳动、亚马逊、微软在半年内面试中考过）
-	// 解码方法（字节跳动、亚马逊、Facebook 在半年内面试中考过）
-	// 字符串转换整数 (atoi) （亚马逊、微软、Facebook 在半年内面试中考过）
-	// 找到字符串中所有字母异位词（Facebook 在半年内面试中常考）
-
 	// 最长有效括号（亚马逊、字节跳动、华为在半年内面试中考过）
 	// 赛车（谷歌在半年内面试中考过）
 	// 通配符匹配（Facebook、微软、字节跳动在半年内面试中考过）
 	// 不同的子序列（MathWorks 在半年内面试中考过）
-
 }
 
 /* 简单 */
@@ -238,9 +233,203 @@ func validPalindrome2(s string) (result bool) {
 
 /* 中等 */
 // 最长上升子序列（字节跳动、亚马逊、微软在半年内面试中考过）
+// 法一：动态规划
+// dp[i]代表nums[i]结尾的最长上升子序列长度
+// dp[i]的取决于dp[j]，0<=j<i 且 nums[j] < nums[i]，则dp[i] = dp[j]+1
+// 时间 O(n^2)，空间 O(n)
+func lengthOfLIS(nums []int) (result int) {
+	n := len(nums)
+	if n <= 1 {
+		return n
+	}
+	dp := make([]int, n)
+	dp[0] = 1
+	for i := 1; i < n; i++ {
+		dp[i] = 1
+		for j := 0; j < i; j++ {
+			if nums[j] < nums[i] {
+				dp[i] = getMax(dp[i], dp[j]+1)
+			}
+		}
+		result = getMax(result, dp[i])
+	}
+	return result
+}
+
+// 法二：dp+二分查找
+// tail[i]代表长度为i+1的上升子序列中的末位最小值
+// O(nlogn)
+func lengthOfLIS2(nums []int) (result int) {
+	n := len(nums)
+	if n <= 1 {
+		return n
+	}
+	tail := make([]int, n)
+	tail[0] = nums[0]
+	key := 0 // 目前计算完毕的tail[i]的索引
+	for i := 1; i < n; i++ {
+		if nums[i] > tail[key] {
+			key++
+			tail[key] = nums[i]
+		} else {
+			// 在计算完毕的tail范围内查找大于等于nums[i]的最小元素
+			// 试图缩小计算完毕的长度为m的子序列的范围
+			left, right := 0, key
+			for left < right {
+				mid := left + ((right - left) >> 1)
+				if tail[mid] >= nums[i] {
+					right = mid
+				} else {
+					left = mid + 1
+				}
+			}
+			tail[left] = nums[i]
+		}
+	}
+	return key + 1
+}
+
 // 解码方法（字节跳动、亚马逊、Facebook 在半年内面试中考过）
+// 法一：动态规划
+// dp[n]表示s的前n个字符有多少种解码方式
+// 如果s[i] = 0, dp[i] = dp[i-2]
+// 如果s[i-1]是1，dp[i] = dp[i-2] + dp[i-1]
+// 如果s[i-1]是2，且s[i]为1-6，dp[i] = dp[i-2] + dp[i-1]
+// 其他情况，dp[i] = dp[i-1]
+func numDecodings(s string) int {
+	n := len(s)
+	if n == 0 || s[0] == '0' {
+		return 0
+	}
+	dp := make([]int, n+1)
+	dp[0] = 1 // 为了方便计算
+	dp[1] = 1
+	for i := 2; i <= n; i++ {
+		if s[i-1] == '0' {
+			// 出现'0'有两种情况，一种是10或20，一种是当前的'0'不合法
+			if s[i-2] != '1' && s[i-2] != '2' {
+				return 0
+			}
+			dp[i] = dp[i-2]
+		} else if (s[i-2] == '1') || (s[i-2] == '2' && s[i-1] >= '1' && s[i-1] <= '6') {
+			dp[i] = dp[i-2] + dp[i-1]
+		} else {
+			dp[i] = dp[i-1]
+		}
+	}
+	return dp[n]
+}
+
+// 法二：对法一的空间优化，best
+func numDecodings2(s string) (cur int) {
+	n := len(s)
+	if n == 0 || s[0] == '0' {
+		return 0
+	} else if n == 1 {
+		return 1
+	}
+	p, pp := 1, 1
+	for i := 1; i < n; i++ {
+		if s[i] == '0' {
+			// 出现'0'有两种情况，一种是10或20，一种是当前的'0'不合法
+			if s[i-1] != '1' && s[i-1] != '2' {
+				return 0
+			}
+			cur = pp
+		} else if (s[i-1] == '1') || (s[i-1] == '2' && s[i] >= '1' && s[i] <= '6') {
+			cur = p + pp
+		} else {
+			cur = p
+		}
+		p, pp = cur, p
+	}
+	return cur
+}
+
 // 字符串转换整数 (atoi) （亚马逊、微软、Facebook 在半年内面试中考过）
+func myAtoi(s string) (num int) {
+	// 去掉左侧空格
+	for s != "" && s[0] == ' ' {
+		s = s[1:]
+	}
+	if s == "" {
+		return 0
+	}
+	signed := 1 // 记录符号，去掉符号位
+	if s[0] == '+' || s[0] == '-' {
+		if s[0] == '-' {
+			signed = -1
+		}
+		s = s[1:]
+	}
+	// 禁止出现两个符号位或非数字字符
+	if s == "" || s[0] == '+' || s[0] == '-' || s[0] < '0' || s[0] > '9' {
+		return 0
+	}
+	for s != "" {
+		if s[0] < '0' || s[0] > '9' {
+			break
+		}
+		n := int(s[0] - '0')
+		if num > (math.MaxInt32-n)/10 {
+			if signed == 1 {
+				return math.MaxInt32
+			} else {
+				return math.MinInt32
+			}
+		}
+		num = num*10 + n
+		s = s[1:]
+	}
+
+	return num * signed
+}
+
 // 找到字符串中所有字母异位词（Facebook 在半年内面试中常考）
+// 法一：滑动窗口
+func findAnagrams(s string, p string) (result []int) {
+	sl, pl := len(s), len(p)
+	if pl > sl {
+		return nil
+	}
+	need := [26]int{}
+	for i := 0; i < pl; i++ {
+		need[p[i]-'a']++
+	}
+	validType := 0
+	for i := 0; i < 26; i++ {
+		if need[i] > 0 {
+			validType++
+		}
+	}
+	window := [26]int{}
+	valid := 0
+	for i := 0; i < sl; i++ {
+		// 更新窗口右侧新边界字母
+		w := s[i] - 'a'
+		if need[w] > 0 {
+			window[w]++
+			if window[w] == need[w] {
+				valid++
+			}
+		}
+		// 收缩窗口
+		if i >= pl-1 {
+			if valid == validType {
+				result = append(result, i+1-pl)
+			}
+			left := s[i+1-pl] - 'a'
+			if need[left] > 0 {
+				if window[left] == need[left] {
+					valid--
+				}
+				window[left]--
+			}
+		}
+	}
+	return result
+}
+
 // 最长回文子串（亚马逊、字节跳动、华为在半年内面试中常考）
 // 法一：暴力+双指针
 // best
