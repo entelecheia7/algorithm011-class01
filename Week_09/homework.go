@@ -8,11 +8,6 @@ import (
 
 func main() {
 	fmt.Println(validPalindrome2("abca"))
-
-	// 最长有效括号（亚马逊、字节跳动、华为在半年内面试中考过）
-	// 赛车（谷歌在半年内面试中考过）
-	// 通配符匹配（Facebook、微软、字节跳动在半年内面试中考过）
-	// 不同的子序列（MathWorks 在半年内面试中考过）
 }
 
 /* 简单 */
@@ -496,9 +491,111 @@ func longestPalindrome2(s string) (result string) {
 
 /* 困难 */
 // 最长有效括号（亚马逊、字节跳动、华为在半年内面试中考过）
+func longestValidParentheses(s string) (maxLen int) {
+	n := len(s)
+	if n < 2 {
+		return 0
+	}
+	stack := []int{-1}
+	i := 0
+	for i < n {
+		if s[i] == '(' {
+			stack = append(stack, i)
+		} else {
+			stack = stack[:len(stack)-1]
+			if len(stack) == 0 {
+				stack = append(stack, i)
+			} else {
+				maxLen = getMax(maxLen, i-stack[len(stack)-1])
+			}
+		}
+		i++
+	}
+	return maxLen
+}
+
 // 赛车（谷歌在半年内面试中考过）
+// dp[i]表示target是i时的最短指令长度
+// target = 2^n-1时，指令均为A，这时一定是最短指令
+// 当target是其他位置时，假设2^(k-1) <= target < 2^k
+// 那么可以先走(k-1)次A，到达位置(2^(k-1)-1)，通过R转向，再走m个A，再走R转向，递归走剩余路程
+// 也可以走k次A，到达(2^k-1)，通过R转向，再走剩余路程:(i<<k)-1-target
+var dp [10001]int
+
+func racecar(target int) int {
+	if dp[target] > 0 {
+		return dp[target]
+	}
+	k := int(math.Floor(math.Log2(float64(target)))) + 1
+	if target+1 == (1 << k) {
+		return k
+	}
+	// 走k次A，到达(2^k-1)，通过R转向，再走剩余路程
+	dp[target] = k + 1 + racecar((1<<k)-1-target)
+	// 走(k-1)次A，到达位置(2^(k-1)-1)，通过R转向，再走m个A，再走R转向，递归走剩余路程
+	// m的取值范围是[0, k-1)
+	for m := 0; m < k-1; m++ {
+		dp[target] = getMin(dp[target], k+m+1+racecar(target-(1<<(k-1))+(1<<m)))
+	}
+	return dp[target]
+}
+
 // 通配符匹配（Facebook、微软、字节跳动在半年内面试中考过）
+// dp[i][j]表示s的前i个字符是否可以匹配p的前j个字符
+func isMatch(s string, p string) bool {
+	m, n := len(s), len(p)
+	dp := make([][]bool, m+1)
+	// init
+	for k := range dp {
+		dp[k] = make([]bool, n+1)
+	}
+	// 当s为空时
+	dp[0][0] = true
+	for i := 1; i <= n; i++ {
+		if p[i-1] == '*' {
+			dp[0][i] = true
+		} else {
+			break
+		}
+	}
+
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ { // p 不为空，所以从1开始
+			if s[i-1] == p[j-1] || p[j-1] == '?' {
+				dp[i][j] = dp[i-1][j-1]
+			} else if p[j-1] == '*' { // *可以匹配空字符串或者任意多个字符
+				dp[i][j] = dp[i][j-1] || dp[i-1][j]
+			}
+		}
+	}
+
+	return dp[m][n]
+}
+
 // 不同的子序列（MathWorks 在半年内面试中考过）
+func numDistinct(s string, t string) int {
+	m, n := len(t), len(s)
+	if m == 0 || n == 0 {
+		return 0
+	}
+	dp := make([][]int, m+1)
+	for k := range dp {
+		dp[k] = make([]int, n+1)
+	}
+	for j := 0; j <= n; j++ { // 空字符串可以视为任何字符串的子序列
+		dp[0][j] = 1
+	}
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if s[j-1] == t[i-1] {
+				dp[i][j] = dp[i-1][j-1] + dp[i][j-1]
+			} else {
+				dp[i][j] = dp[i][j-1]
+			}
+		}
+	}
+	return dp[m][n]
+}
 
 /* helper */
 func getMin(a, b int) int {
